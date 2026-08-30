@@ -30,7 +30,7 @@ No Mac, Xcode, server, database, or build step is needed.
 - local browser storage
 - Home Screen installation/PWA support
 
-The optional **Compare Google** button requires your own Google Geocoding API key. The rest of NumberWalk does not.
+The optional **Compare Google** button uses the browser-side **Maps JavaScript API Geocoding Service**. Add your own restricted Google Maps Platform browser API key in NumberWalk Settings. The rest of NumberWalk does not need a Google key. See `GOOGLE_API_SETUP.md` for the exact setup for `https://mogons57.github.io/numberwalk/`.
 
 ## Important data note
 

@@ -1,7 +1,7 @@
 (() => {
 const K='numberwalk.v03';
 const state=JSON.parse(localStorage.getItem(K)||'{"session":null,"records":[],"googleKey":""}');
-let map,reviewMap,selectedMarker,googleMarker,selectedLatLng=null,gpsCircle=null,currentPos=null,queueFilter='to-submit',photoData=null;
+let map,reviewMap,selectedMarker,googleMarker,selectedLatLng=null,gpsCircle=null,currentPos=null,queueFilter='to-submit',photoData=null,googleMapsPromise=null,googleMapsKeyLoaded='';
 const $=id=>document.getElementById(id); const save=()=>localStorage.setItem(K,JSON.stringify(state));
 function initMap(){map=L.map('map',{zoomControl:false}).setView([51.591,-2.756],18); L.control.zoom({position:'bottomright'}).addTo(map); addLayers(map); map.on('click',e=>setSelected(e.latlng));}
 function addLayers(m){const aerial=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,attribution:'Tiles © Esri'}).addTo(m); const osm=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap contributors'}); L.control.layers({'Aerial':aerial,'Street map':osm},null,{position:'topleft'}).addTo(m)}
@@ -18,9 +18,64 @@ function renderQueue(){const list=state.records.filter(r=>queueFilter==='all'||(
 function renderAll(){renderSession();renderQueue()}
 function esc(s=''){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function openGoogle(id){const r=state.records.find(x=>x.id===id);if(!r)return;const q=encodeURIComponent(r.address);window.open(`https://www.google.com/maps/search/?api=1&query=${q}`,'_blank','noopener')}
-async function compare(){if(!selectedLatLng){alert('Select the correct building first.');return}if(!state.googleKey){$('settingsDialog').showModal();return}const url=`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address())}&key=${encodeURIComponent(state.googleKey)}`;try{const j=await fetch(url).then(r=>r.json());if(!j.results?.length)throw new Error(j.status||'No result');const p=j.results[0].geometry.location;if(googleMarker)map.removeLayer(googleMarker);const icon=L.divIcon({className:'google-marker',iconSize:[16,16]});googleMarker=L.marker([p.lat,p.lng],{icon}).addTo(map);const d=distance(selectedLatLng.lat,selectedLatLng.lng,p.lat,p.lng);$('googlePosition').textContent=`${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;$('shiftRow').textContent=`Your surveyed point is ${Math.round(d)} m from Google's geocoded position.`;$('shiftRow').classList.remove('hidden')}catch(e){$('googlePosition').textContent='Comparison failed';alert('Google comparison failed. Check that the Geocoding API and key restrictions are configured.') }}
+function loadGoogleMaps(){
+  const key=(state.googleKey||'').trim();
+  if(!key)return Promise.reject(new Error('NO_KEY'));
+  if(window.google?.maps?.Geocoder){googleMapsKeyLoaded=key;return Promise.resolve(window.google.maps)}
+  if(googleMapsPromise){
+    if(googleMapsKeyLoaded && googleMapsKeyLoaded!==key)return Promise.reject(new Error('KEY_CHANGED'));
+    return googleMapsPromise;
+  }
+  googleMapsKeyLoaded=key;
+  googleMapsPromise=new Promise((resolve,reject)=>{
+    const callback='numberWalkGoogleReady_'+Date.now();
+    const script=document.createElement('script');
+    const timer=setTimeout(()=>{cleanup();googleMapsPromise=null;reject(new Error('LOAD_TIMEOUT'))},15000);
+    function cleanup(){clearTimeout(timer);try{delete window[callback]}catch(_){window[callback]=undefined}}
+    window[callback]=()=>{cleanup();if(window.google?.maps?.Geocoder)resolve(window.google.maps);else{googleMapsPromise=null;reject(new Error('LOAD_FAILED'))}};
+    script.async=true;script.defer=true;
+    script.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&loading=async&callback=${callback}`;
+    script.onerror=()=>{cleanup();googleMapsPromise=null;reject(new Error('LOAD_FAILED'))};
+    document.head.appendChild(script);
+  });
+  return googleMapsPromise;
+}
+function geocodeInBrowser(maps,addressText){
+  return new Promise((resolve,reject)=>{
+    const geocoder=new maps.Geocoder();
+    geocoder.geocode({address:addressText},(results,status)=>{
+      if(status==='OK'&&results?.length)resolve(results[0]);
+      else reject(new Error(status||'NO_RESULTS'));
+    });
+  });
+}
+async function compare(){
+  if(!selectedLatLng){alert('Select the correct building first.');return}
+  if(!state.googleKey){$('settingsDialog').showModal();return}
+  $('googlePosition').textContent='Checking…';
+  try{
+    const maps=await loadGoogleMaps();
+    const result=await geocodeInBrowser(maps,address());
+    const loc=result.geometry.location;
+    const p={lat:loc.lat(),lng:loc.lng()};
+    if(googleMarker)map.removeLayer(googleMarker);
+    const icon=L.divIcon({className:'google-marker',iconSize:[16,16]});
+    googleMarker=L.marker([p.lat,p.lng],{icon}).addTo(map);
+    const d=distance(selectedLatLng.lat,selectedLatLng.lng,p.lat,p.lng);
+    $('googlePosition').textContent=`${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
+    $('shiftRow').textContent=`Your surveyed point is ${Math.round(d)} m from Google's geocoded position.`;
+    $('shiftRow').classList.remove('hidden');
+  }catch(e){
+    console.error('Google comparison failed',e);
+    $('googlePosition').textContent='Comparison failed';
+    let message='Google comparison failed. Check that Maps JavaScript API and Geocoding API are enabled and that the API key allows this GitHub Pages website.';
+    if(e.message==='KEY_CHANGED')message='The Google API key changed after Google Maps loaded. Reload NumberWalk and try again.';
+    if(e.message==='LOAD_TIMEOUT'||e.message==='LOAD_FAILED')message='Google Maps could not load. Check the API key, billing, API restrictions and website restriction, then try again.';
+    alert(message);
+  }
+}
 function distance(a,b,c,d){const R=6371000,x=(c-a)*Math.PI/180,y=(d-b)*Math.PI/180,z=Math.sin(x/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(y/2)**2;return 2*R*Math.atan2(Math.sqrt(z),Math.sqrt(1-z))}
 function tab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));$(name+'Tab').classList.add('active');if(name==='review')renderReview();if(name==='queue')renderQueue();setTimeout(()=>{if(name==='survey')map.invalidateSize()},50)}
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));$('gpsBtn').onclick=locate;$('prevNumberBtn').onclick=()=>step(-1);$('nextNumberBtn').onclick=()=>step(1);$('houseNumber').oninput=updatePreview;$('changeSessionBtn').onclick=openSession;$('cancelSessionBtn').onclick=()=>$('sessionDialog').close();$('sessionForm').onsubmit=e=>{e.preventDefault();const mode=$('sideMode').value;state.session={id:Date.now().toString(),street:$('street').value.trim(),locality:$('locality').value.trim(),postcode:$('postcode').value.trim(),startNumber:$('startNumber').value.trim(),mode,step:mode==='all'?1:2};$('houseNumber').value=state.session.startNumber;save();$('sessionDialog').close();renderAll();};$('saveNextBtn').onclick=saveRecord;$('compareBtn').onclick=compare;$('settingsBtn').onclick=()=>{$('googleApiKey').value=state.googleKey||'';$('settingsDialog').showModal()};$('saveKeyBtn').onclick=()=>{state.googleKey=$('googleApiKey').value.trim();save();$('settingsDialog').close()};$('clearKeyBtn').onclick=()=>{state.googleKey='';$('googleApiKey').value='';save()};$('photoInput').onchange=()=>{const f=$('photoInput').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{photoData=rd.result;$('photoStatus').textContent=`Reference photo attached: ${f.name}`;$('photoStatus').classList.remove('hidden')};rd.readAsDataURL(f)};$('reviewMapBtn').onclick=()=>renderReview();document.body.onclick=e=>{const o=e.target.closest('[data-open]');if(o)openGoogle(o.dataset.open);const d=e.target.closest('[data-delete]');if(d&&confirm('Delete this surveyed house?')){state.records=state.records.filter(r=>r.id!==d.dataset.delete);save();renderReview();renderQueue()}const s=e.target.closest('[data-submit]');if(s){const r=state.records.find(r=>r.id===s.dataset.submit);if(r){r.submitted=!r.submitted;save();renderQueue()}}};document.querySelectorAll('.filter-button').forEach(b=>b.onclick=()=>{queueFilter=b.dataset.filter;document.querySelectorAll('.filter-button').forEach(x=>x.classList.toggle('active',x===b));renderQueue()});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));$('gpsBtn').onclick=locate;$('prevNumberBtn').onclick=()=>step(-1);$('nextNumberBtn').onclick=()=>step(1);$('houseNumber').oninput=updatePreview;$('changeSessionBtn').onclick=openSession;$('cancelSessionBtn').onclick=()=>$('sessionDialog').close();$('sessionForm').onsubmit=e=>{e.preventDefault();const mode=$('sideMode').value;state.session={id:Date.now().toString(),street:$('street').value.trim(),locality:$('locality').value.trim(),postcode:$('postcode').value.trim(),startNumber:$('startNumber').value.trim(),mode,step:mode==='all'?1:2};$('houseNumber').value=state.session.startNumber;save();$('sessionDialog').close();renderAll();};$('saveNextBtn').onclick=saveRecord;$('compareBtn').onclick=compare;$('settingsBtn').onclick=()=>{$('googleApiKey').value=state.googleKey||'';$('settingsDialog').showModal()};$('saveKeyBtn').onclick=()=>{const next=$('googleApiKey').value.trim();if(next!==state.googleKey&&googleMapsPromise){alert('API key saved. Reload NumberWalk before using Google comparison with the new key.')}state.googleKey=next;save();$('settingsDialog').close()};$('clearKeyBtn').onclick=()=>{state.googleKey='';$('googleApiKey').value='';save()};$('photoInput').onchange=()=>{const f=$('photoInput').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{photoData=rd.result;$('photoStatus').textContent=`Reference photo attached: ${f.name}`;$('photoStatus').classList.remove('hidden')};rd.readAsDataURL(f)};$('reviewMapBtn').onclick=()=>renderReview();document.body.onclick=e=>{const o=e.target.closest('[data-open]');if(o)openGoogle(o.dataset.open);const d=e.target.closest('[data-delete]');if(d&&confirm('Delete this surveyed house?')){state.records=state.records.filter(r=>r.id!==d.dataset.delete);save();renderReview();renderQueue()}const s=e.target.closest('[data-submit]');if(s){const r=state.records.find(r=>r.id===s.dataset.submit);if(r){r.submitted=!r.submitted;save();renderQueue()}}};document.querySelectorAll('.filter-button').forEach(b=>b.onclick=()=>{queueFilter=b.dataset.filter;document.querySelectorAll('.filter-button').forEach(x=>x.classList.toggle('active',x===b));renderQueue()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});initMap();renderAll();locate();
 })();
