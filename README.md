@@ -35,3 +35,7 @@ The optional **Compare Google** button uses the browser-side **Maps JavaScript A
 ## Important data note
 
 Survey information is stored in that browser using localStorage. It is not synced to GitHub or another phone. Do not clear Safari website data if you need the captured records. An export/backup feature is a sensible next addition.
+
+
+## v0.5 API call safety limit
+Settings now includes a configurable local daily limit for Google comparisons. The default is 250 comparisons per local calendar day. The app shows today's usage and refuses further Compare Google requests once the limit is reached, resetting automatically the next day. This is a client-side safety guard; keep the Google website and API-key restrictions enabled as well.

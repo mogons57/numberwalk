@@ -62,3 +62,7 @@ If **Compare Google** fails:
 4. Confirm the API restriction includes both required APIs.
 5. If you just changed restrictions, try again after the settings have propagated.
 6. If you changed the key in NumberWalk after Google had already loaded, reload the page before comparing again.
+
+
+## NumberWalk local daily limit
+Version 0.5 also defaults to 250 Google comparisons per day. Change this under the gear/settings button. The counter resets on the next local calendar day. This protects against accidental calls made by NumberWalk, but because it runs in browser JavaScript it is not a Google-enforced billing cap.

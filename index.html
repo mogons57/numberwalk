@@ -156,6 +156,11 @@
       <label>Google Maps browser API key
         <input id="googleApiKey" autocomplete="off" type="password" placeholder="Optional" />
       </label>
+      <label>Maximum Google comparisons per day
+        <input id="dailyApiLimit" type="number" min="1" max="10000" inputmode="numeric" value="250" />
+      </label>
+      <p id="apiUsageStatus" class="muted">Google comparisons today: 0 / 250</p>
+      <p class="muted">This is a local safety limit stored on this device. It prevents NumberWalk itself from making more comparison requests after the limit is reached; it is not a substitute for Google Cloud API restrictions.</p>
       <div class="dialog-actions">
         <button id="clearKeyBtn" class="secondary-button" type="button">Clear key</button>
         <button id="saveKeyBtn" class="primary-button compact" type="button">Save</button>
