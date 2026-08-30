@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#0d5c63" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="NumberWalk" />
+  <title>NumberWalk</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">STREET ADDRESS SURVEY</div>
+        <h1>NumberWalk</h1>
+      </div>
+      <button id="gpsBtn" class="icon-button" type="button" aria-label="Centre on my location">◎</button>
+    </header>
+
+    <nav class="tabs" aria-label="Main sections">
+      <button class="tab active" data-tab="survey">Survey</button>
+      <button class="tab" data-tab="review">Review</button>
+      <button class="tab" data-tab="queue">Queue <span id="queueBadge" class="badge">0</span></button>
+    </nav>
+
+    <main>
+      <section id="surveyTab" class="tab-panel active">
+        <div id="sessionBanner" class="session-banner hidden">
+          <div>
+            <strong id="sessionStreet"></strong>
+            <div id="sessionMeta" class="muted"></div>
+          </div>
+          <button id="changeSessionBtn" class="small-button" type="button">Change</button>
+        </div>
+
+        <div id="map" class="map"></div>
+        <div class="map-note">
+          <span id="gpsStatus">Getting location…</span>
+          <span>Tap the centre of the correct building.</span>
+        </div>
+
+        <section class="capture-card">
+          <div class="number-row">
+            <button id="prevNumberBtn" class="step-button" type="button">−</button>
+            <label class="number-field">
+              <span>House number</span>
+              <input id="houseNumber" inputmode="text" autocomplete="off" value="1" />
+            </label>
+            <button id="nextNumberBtn" class="step-button" type="button">+</button>
+          </div>
+
+          <div id="addressPreview" class="address-preview"></div>
+
+          <div class="position-grid">
+            <div class="position-box">
+              <span>Selected position</span>
+              <strong id="selectedPosition">Tap a building</strong>
+            </div>
+            <div class="position-box">
+              <span>Google comparison</span>
+              <strong id="googlePosition">Not checked</strong>
+            </div>
+          </div>
+
+          <div id="shiftRow" class="shift-row hidden"></div>
+
+          <textarea id="note" rows="2" placeholder="Optional note — e.g. number visible on left door"></textarea>
+
+          <div class="action-row">
+            <label class="secondary-button camera-button">
+              <input id="photoInput" type="file" accept="image/*" capture="environment" />
+              📷 Photo
+            </label>
+            <button id="compareBtn" class="secondary-button" type="button">Compare Google</button>
+          </div>
+          <div id="photoStatus" class="photo-status hidden"></div>
+
+          <button id="saveNextBtn" class="primary-button" type="button">SAVE &amp; NEXT HOUSE</button>
+        </section>
+      </section>
+
+      <section id="reviewTab" class="tab-panel">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">CURRENT WALK</div>
+            <h2>Review surveyed houses</h2>
+          </div>
+          <button id="reviewMapBtn" class="small-button" type="button">Fit map</button>
+        </div>
+        <div id="reviewMap" class="map review-map"></div>
+        <div id="reviewSummary" class="summary-strip"></div>
+        <div id="reviewList" class="card-list"></div>
+      </section>
+
+      <section id="queueTab" class="tab-panel">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">GOOGLE MAPS</div>
+            <h2>Submission queue</h2>
+          </div>
+        </div>
+        <p class="intro">Open each address in Google Maps, use <strong>Suggest an edit → Fix an address</strong>, move the pin to the building you surveyed, then mark it submitted here.</p>
+        <div class="queue-filter">
+          <button class="filter-button active" data-filter="to-submit">To submit</button>
+          <button class="filter-button" data-filter="submitted">Submitted</button>
+          <button class="filter-button" data-filter="all">All</button>
+        </div>
+        <div id="queueList" class="card-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="sessionDialog">
+    <form id="sessionForm" method="dialog" class="dialog-card">
+      <div class="eyebrow">NEW STREET SESSION</div>
+      <h2>Where are you surveying?</h2>
+      <label>Street
+        <input id="street" autocomplete="street-address" required placeholder="e.g. Newport Road" />
+      </label>
+      <label>Town / locality
+        <input id="locality" autocomplete="address-level2" placeholder="e.g. Caldicot" />
+      </label>
+      <label>Postcode
+        <input id="postcode" autocomplete="postal-code" placeholder="Optional" />
+      </label>
+      <div class="two-col">
+        <label>First number
+          <input id="startNumber" inputmode="text" value="1" required />
+        </label>
+        <label>Sequence
+          <select id="sideMode">
+            <option value="odd">Odd (+2)</option>
+            <option value="even">Even (+2)</option>
+            <option value="all">Every number (+1)</option>
+          </select>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button id="cancelSessionBtn" class="secondary-button" type="button">Cancel</button>
+        <button class="primary-button compact" type="submit">Start walk</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="eyebrow">OPTIONAL</div>
+      <h2>Google comparison</h2>
+      <p class="intro">NumberWalk does not need a Google API key for surveying. If you have a Google Geocoding API key, enter it here to compare your selected location with Google's geocoded address position. The key is stored only in this browser.</p>
+      <label>Google Geocoding API key
+        <input id="googleApiKey" autocomplete="off" type="password" placeholder="Optional" />
+      </label>
+      <div class="dialog-actions">
+        <button id="clearKeyBtn" class="secondary-button" type="button">Clear key</button>
+        <button id="saveKeyBtn" class="primary-button compact" type="button">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <button id="settingsBtn" class="floating-settings" type="button" aria-label="Settings">⚙</button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>
