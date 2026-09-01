@@ -1,40 +1,40 @@
-# Security
+# Security notes
 
-## Audit scope
-
-Version 0.6 was reviewed as a static browser application. The review covered credential handling, DOM injection/XSS, browser storage, service-worker caching, external scripts, map/API requests, photo handling, navigation to Google Maps and accidental Google API usage.
-
-This is not a formal penetration test and cannot guarantee the absence of every vulnerability. The application has no backend server, login system, database or privileged write API of its own, which substantially reduces its attack surface.
+NumberWalk is deliberately a static web application with no application backend, login system or automatic Google Maps write API.
 
 ## Credential model
 
-NumberWalk must never ask for a Google username or password. Google account authentication happens only inside Google Maps after the user follows an external link.
+NumberWalk never asks for or stores a Google account username/password. Google Maps edits are submitted manually after the app opens Google Maps, so attribution is handled by the Google account signed into Google Maps.
 
-The optional Google Maps Platform browser API key is a client-side key. Client-side API keys can be observed during normal browser use and must therefore be protected with Google Cloud restrictions. Do not treat the key like a password.
+The optional Google Maps JavaScript API key is a browser key, not a password. It is session-only by default and should always be protected in Google Cloud with both website restrictions and API restrictions. The local per-day comparison limit is only an accidental-use guard and is not a Google-enforced billing control.
 
-Recommended restrictions:
+## Browser protections
 
-- Application restriction: **Websites**
-- Allowed referrer: the exact HTTPS deployment origin/path appropriate to the host
-- API restrictions: **Maps JavaScript API** and **Geocoding API** only
-- Disable other unused APIs in the Google Cloud project
+- Content Security Policy limits executable scripts and network/image destinations to the static app and required map providers.
+- Leaflet 1.9.4 is version pinned and loaded with its published Subresource Integrity hash.
+- The rotation extension is pinned to `@tomickigrzegorz/leaflet-rotate` 0.2.4 rather than an unversioned/latest URL.
+- Survey text is inserted with DOM text properties in record/queue views rather than interpreted as HTML.
+- External Google Maps windows use `noopener`.
+- The service worker only handles/caches known same-origin NumberWalk assets; it does not cache Google, Esri, OpenStreetMap or unpkg responses.
+- Local-storage parsing is defensive and corrupted state falls back to a clean app state.
+- There is a user control to clear NumberWalk local data.
+- Backup CSV values are CSV-escaped before export.
 
-NumberWalk's local daily counter is an accidental-use guard only. Client-side JavaScript can be modified by a determined user and therefore cannot enforce a billing cap.
+## Map-rotation dependency
 
-## Local-data risks
+Map rotation requires functionality that Leaflet itself does not provide. v0.7 uses the pinned MIT-licensed `@tomickigrzegorz/leaflet-rotate` 0.2.4 browser build from unpkg. This avoids an unpinned dependency but remains a third-party CDN supply-chain dependency. A future hardening step could vendor the reviewed plugin file into this repository and then remove unpkg from `script-src` for that dependency.
 
-Survey records may include precise building coordinates, notes and reference photos. They are stored locally and are not encrypted by NumberWalk. Do not record sensitive personal information in notes or photos.
+## Local data risks
 
-GitHub Pages project sites on the same `USERNAME.github.io` hostname share the same browser origin. For stronger separation from other web projects, use a dedicated custom hostname.
+Browser storage is not encrypted by NumberWalk. Someone with access to the unlocked device/browser may be able to inspect or erase it. On GitHub Pages, different project paths under the same `USERNAME.github.io` hostname share an origin; use a dedicated custom hostname if separation from other projects is important.
 
-## External services
+The exported CSV is deliberately readable and contains location data and Google Maps links. Email/share it only to destinations you trust.
 
-The app necessarily requests map tiles from Esri/OpenStreetMap and, when selected by the user, geocoding from Google. Those providers can receive ordinary request metadata. See `PRIVACY.md`.
+## Scope limitations
 
-## Supply-chain controls
+This is a lightweight static-app review, not a formal penetration test. Browser, operating-system, CDN, map-provider and Google platform vulnerabilities remain outside NumberWalk's control. Keep third-party dependencies pinned and review changes before upgrading them.
 
-Leaflet is pinned to 1.9.4 and loaded with Subresource Integrity hashes published by the Leaflet project. The Content Security Policy restricts executable script sources. Any dependency change should update and verify the integrity hash rather than removing it.
 
-## Reporting a problem
+## FindMyAddress integration
 
-Do not put real API keys, passwords, private survey data or exploit payloads containing personal data into a public GitHub issue. For non-sensitive bugs, a normal repository issue is appropriate. If maintaining a public fork, add a private security-reporting contact or enable GitHub private vulnerability reporting before accepting external security reports.
+The FindMyAddress integration is intentionally link-only. NumberWalk does not scrape or call undocumented FindMyAddress endpoints, does not store FindMyAddress credentials, and does not attempt to evade usage limits. The site is opened with `noopener` to prevent the new page from controlling the NumberWalk window.

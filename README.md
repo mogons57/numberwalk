@@ -1,103 +1,117 @@
 # NumberWalk
 
-NumberWalk is a small, static, mobile-first web app for surveying house-number locations while walking a street. It helps a person record which building belongs to which house number, compare a surveyed building location with Google's geocoded position (optional), and keep a queue of addresses to correct manually in Google Maps.
+NumberWalk is a small mobile-first web app for surveying the real-world positions of house numbers while walking a street and then working through those observations as a Google Maps edit queue.
 
-## What NumberWalk does — and does not do
+It is a **field capture and workflow aid**. It does not sign in to Google and does not submit edits automatically. Google Maps edits are still made manually by the person using Google Maps, under that person's signed-in Google account.
 
-NumberWalk **does not submit edits to Google Maps** and it does not log in to a Google account. It opens an address in Google Maps; the user then makes and submits the correction in Google Maps while signed in there. Google, not NumberWalk, handles the account identity and review of the edit.
+## v0.7 field workflow
 
-NumberWalk never asks for, receives, or stores a Google username or password.
+The survey screen is designed to leave as much of an iPhone screen as possible for the aerial map.
+
+- The map can be rotated with the left/right rotation buttons or with a two-finger rotate gesture. **N** returns to north-up.
+- The map opens at high zoom when GPS is centred so individual buildings remain usable while the larger map area gives street context.
+- Every saved NumberWalk record is labelled on the survey map, not only records from the current street session.
+- The compact house-number box still supports manual typing and `−` / `+` one-number adjustment.
+- **Next** controls what happens after **SAVE & NEXT HOUSE**: `−2`, `−1`, `0`, `+1`, or `+2`.
+- Notes and reference-photo capture have been removed from the field screen to reduce clutter.
+- The Queue screen has **Email / share backup**. On supported iPhones this opens the system share sheet with a CSV attachment; choose Mail to email it to yourself. The CSV includes each address, surveyed coordinates, submission status, a Google Maps address link and a surveyed-pin link.
+
+Existing records created by earlier NumberWalk versions remain compatible.
 
 ## Typical use
 
-1. Open NumberWalk on a phone over HTTPS and allow precise location access.
-2. Start a Street Session by entering the street, locality/postcode, first house number, and odd/even/all sequence.
-3. Walk to a house, identify its number, and tap/drag the marker to the centre of the correct building on the aerial map.
-4. Optionally attach a reference photo or note.
-5. Optionally press **Compare Google** to see how far Google's geocoded position is from the surveyed building.
-6. Press **Save & Next House**. NumberWalk advances by +2 for odd/even sessions or +1 for all numbers.
-7. Use **Review** to check the surveyed street.
-8. In **Queue**, open each address in Google Maps and use Google's normal edit tools to correct the address/pin. Mark the item submitted in NumberWalk afterwards.
+1. Open NumberWalk on the phone and allow precise location.
+2. Start a street session and enter the street/locality once.
+3. Set the first house number and choose the usual post-save step.
+4. Rotate the map to match the direction you are walking if useful.
+5. Tap the centre of the correct building on the aerial image.
+6. Press **SAVE & NEXT HOUSE**.
+7. Adjust the number manually or change the post-save step whenever the numbering pattern changes.
+8. Use **Compare Google** only when you want to see Google's geocoded position for an address.
+9. Open the Queue later and submit corrections manually in Google Maps.
+10. For a long survey, use **Email / share backup** periodically.
 
 ## Hosting on GitHub Pages
 
-This repository contains only static HTML, CSS and JavaScript. No build step or server is required.
+This repository contains static HTML, CSS and JavaScript. No build step or server is required.
 
 1. Create a GitHub repository.
 2. Put `index.html`, `app.js`, `styles.css`, `sw.js`, `manifest.webmanifest`, and the `icons/` folder at the repository root.
-3. In **Settings → Pages**, deploy from the `main` branch and `/(root)`.
-4. Open the resulting `https://USERNAME.github.io/REPOSITORY/` URL.
-5. On iPhone, Safari's **Share → Add to Home Screen** can install it as a PWA-like Home Screen app.
+3. In **Settings → Pages**, deploy from `main` and `/(root)`.
+4. Open `https://USERNAME.github.io/REPOSITORY/`.
+5. On iPhone, Safari **Share → Add to Home Screen** can install it as a PWA-like Home Screen app.
 
 HTTPS is required for normal browser geolocation.
 
+For stronger browser-storage isolation, use a dedicated custom hostname rather than sharing the whole `USERNAME.github.io` origin with unrelated projects.
+
 ## Optional Google comparison
 
-Surveying works without any Google API key. **Compare Google** uses the browser-side Maps JavaScript API Geocoding Service.
+Surveying works without a Google API key. **Compare Google** uses Google's browser-side Maps JavaScript API Geocoding Service.
 
 If enabling it:
 
-- create a separate Google Maps Platform browser key for this app;
-- restrict the key to the website(s) that host NumberWalk;
-- restrict the key to only the Maps JavaScript API and Geocoding API;
-- disable unused Google APIs in the project;
+- create your own Google Maps Platform browser key;
+- restrict it to the website(s) hosting your copy of NumberWalk;
+- restrict it to the Maps JavaScript API and Geocoding API only;
+- disable unused Google APIs;
 - monitor API usage;
-- use NumberWalk's local daily comparison limit as an additional guard, not as a billing/security control.
+- keep NumberWalk's local daily comparison limit enabled as an additional accidental-use guard.
 
-See `GOOGLE_API_SETUP.md` for setup details.
+See `GOOGLE_API_SETUP.md`.
 
 ### API-key storage
 
-A browser Maps API key is **not a secret credential** in the same sense as a password: any client-side key can be observed by the browser while it is being used. Security therefore comes from Google Cloud website and API restrictions.
+The API key is kept in `sessionStorage` by default and normally disappears when that browser session ends. **Remember API key on this device** deliberately persists it in browser storage. NumberWalk never adds the user's API key, Google account name, Google password or OAuth credentials to the repository.
 
-NumberWalk keeps the API key in `sessionStorage` by default, so it normally disappears when that browser session ends. Users can explicitly choose **Remember API key on this device**, which persists it in browser storage for convenience. The app never writes a key into the GitHub repository.
+Browser Maps API keys are client-side identifiers and can be observed while in use; Google Cloud website and API restrictions are therefore essential.
 
-## Local data and privacy
+## Local data and backups
 
-NumberWalk has no application backend and sends no survey database to the repository owner. Street sessions, address coordinates, notes, optional reference photos, queue status and settings are stored in the browser on the user's device.
+NumberWalk has no application backend. Survey records and queue status are stored locally in the browser on the device.
 
-Important limitations:
+Closing the page normally does **not** erase browser storage, but clearing Safari/site data can. The CSV share/export is therefore useful for longer surveys. The CSV is generated locally in the browser and is only sent somewhere if the user chooses a destination in the share sheet/email client.
 
-- browser storage is not encrypted by NumberWalk;
-- anyone with access to the unlocked device/browser may be able to view or clear it;
-- on GitHub Pages project sites, storage is scoped to the whole `USERNAME.github.io` origin, not one repository path. Other pages controlled under the same origin can technically access the same origin's browser storage;
-- clearing browser/site data removes NumberWalk records;
-- aerial/street-map tiles are loaded from Esri and OpenStreetMap infrastructure, so those providers receive normal web requests (such as IP address and requested tile coordinates);
-- pressing **Compare Google** sends the typed address to Google for geocoding;
-- opening the submission link transfers the address to Google Maps in the URL/query.
+Normal map use still requests tiles from Esri/OpenStreetMap. Pressing **Compare Google** sends the current address to Google. Opening a queue item sends that address to Google Maps through the Maps URL.
 
-For stronger origin isolation, deploy NumberWalk on a dedicated custom hostname.
-
-## Security measures in v0.6
-
-- no Google account credentials or OAuth tokens in the source;
-- no server-side database or write API to attack;
-- user-entered text is rendered using DOM text nodes rather than executable HTML in record/queue views;
-- Leaflet 1.9.4 is pinned and protected with the integrity hashes published by Leaflet;
-- a Content Security Policy limits scripts, connections and images to the app and required mapping services;
-- the service worker caches only known **same-origin** app assets and never caches Google/Esri/OpenStreetMap cross-origin requests;
-- external Google Maps windows are opened with `noopener`;
-- API-key persistence is opt-in;
-- reference photos are validated as images, size-limited and resized/compressed before storage;
-- malformed local-storage state is handled defensively;
-- a user-accessible control clears all NumberWalk local data.
-
-See `SECURITY.md` for the audit scope and residual risks and `PRIVACY.md` for a user-readable privacy summary.
+See `PRIVACY.md` and `SECURITY.md` for details.
 
 ## Dependencies and external services
 
-- Leaflet 1.9.4, loaded from unpkg with Subresource Integrity (SRI)
-- Esri World Imagery tiles
+- Leaflet 1.9.4 (pinned; SRI protected)
+- `@tomickigrzegorz/leaflet-rotate` 0.2.4 (pinned) for map bearing and touch rotation
+- Esri World Imagery
 - OpenStreetMap tiles
 - optional Google Maps JavaScript API / Geocoding Service
 - Google Maps website for manual edit submission
 
-## Contributions
+The rotation plugin is MIT licensed and has no package dependencies at version 0.2.4. It is loaded from a pinned unpkg URL; see `SECURITY.md` for the remaining supply-chain consideration.
 
-This is intentionally a small static app. Before publishing changes, avoid putting API keys, passwords, OAuth credentials, personal survey exports or other secrets into commits. Test geolocation and Google API restrictions from the actual HTTPS deployment, not from a local `file://` URL.
+## Public forks
 
-If you fork the project, change the Google Cloud website restriction to match **your own** deployment URL. Do not reuse somebody else's API key.
+If you fork NumberWalk:
+
+- create and restrict your own Google API key rather than copying somebody else's;
+- never commit API keys, passwords, OAuth credentials, survey exports or personal data;
+- update Google Cloud website restrictions to your deployment hostname;
+- retain attribution required by the map providers and third-party libraries;
+- test GPS, rotation and the iPhone share-sheet backup from the actual HTTPS deployment.
 
 ## Disclaimer
 
-NumberWalk is an independent utility and is not affiliated with or endorsed by Google, Esri, OpenStreetMap or Leaflet. Map/address edits are ultimately submitted to and reviewed by Google under Google's own policies.
+NumberWalk is an independent utility and is not affiliated with or endorsed by Google, Esri, OpenStreetMap or Leaflet. Address edits are submitted to and reviewed by Google under Google's own policies.
+
+
+## v0.8 — compare both locations in Google Maps
+Queue entries now have two Google actions. **Show both positions** opens Google Maps with Google's geocoded position and the NumberWalk surveyed position visible together as the two endpoints of a short walking-directions view. **Edit address** opens the normal address listing so you can submit the correction. If you used Compare Google before saving a house, that Google coordinate is stored with the record. Older records are geocoded once on demand (subject to the local API-call limit) and the result is then stored. CSV backups now include the Google coordinate and comparison-map link when available.
+
+
+## FindMyAddress support
+
+NumberWalk v0.9 adds **Check official address** links to the Survey and Queue screens.
+
+The button opens the official GeoPlace/Ordnance Survey-backed FindMyAddress website in a new browser tab. This is intended for occasional cases where a house number or official address is unclear.
+
+NumberWalk deliberately does **not** scrape, automate, proxy, or attempt to bypass FindMyAddress's published personal-use search limit. You perform the lookup directly on FindMyAddress and can then return to NumberWalk to record the correct number/address.
+
+No NumberWalk survey record, GPS coordinate, Google API key, or account credential is automatically sent to FindMyAddress.

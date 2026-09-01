@@ -1,41 +1,32 @@
 # Privacy
 
-NumberWalk is designed as a local-first static web application.
+NumberWalk is a static browser application with no NumberWalk server or survey database.
 
-## Information stored on the device
+## Stored on the device
 
-The browser can store:
+The app stores street-session settings, surveyed house numbers and coordinates, queue/submission status, Google-comparison usage counters and app settings in browser storage. New v0.7 records do not capture notes or photos.
 
-- current Street Session details;
-- surveyed house numbers and building coordinates;
-- notes;
-- optional compressed reference photos;
-- whether an item has been marked submitted;
-- the local Google-comparison usage counter and limit;
-- optionally, a remembered Google Maps browser API key.
+An optional Google Maps browser API key is session-only by default. If the user explicitly enables **Remember API key on this device**, it is persisted in browser storage.
 
-NumberWalk itself has no backend server and does not upload this survey database to the repository owner.
+## Data sent to third parties
 
-## Information sent to third parties
+- **Esri / OpenStreetMap:** normal map-tile requests, including ordinary web-request information and the geographic tiles being viewed.
+- **Google:** only when the user presses **Compare Google**, the current address is sent for geocoding; when the user opens a queue item, the address is passed to Google Maps in the Maps URL.
+- **Email/share destination:** only when the user activates **Email / share backup** and chooses a destination. NumberWalk generates the CSV locally first.
 
-Normal use can contact:
+NumberWalk does not receive the user's Google username or password and does not submit Google Maps edits itself.
 
-- **Esri** for aerial map tiles;
-- **OpenStreetMap tile infrastructure** for street-map tiles;
-- **Google Maps Platform** only when the user enables and presses Compare Google; the address being compared is sent for geocoding;
-- **Google Maps** when the user opens an address to submit/check an edit;
-- **unpkg** to load the pinned Leaflet library and stylesheet.
+## Backup contents
 
-Those services may receive ordinary web request metadata such as IP address, user agent, referrer/origin where applicable, and the requested resource. Map tile coordinates also reveal the map area being viewed.
+The exported CSV contains house number, address, surveyed latitude/longitude, survey timestamp, submitted/not-submitted state, a Google Maps address-search link and a link to the surveyed coordinate. Treat the file as location data and store/share it accordingly.
 
-## Google account identity
+## Browser-origin consideration
 
-NumberWalk does not know the user's Google account. It does not receive a Google name, email address, password or OAuth token. If a Google Maps edit is submitted, Google associates it with the Google account currently signed into Google Maps, independently of NumberWalk.
+GitHub Pages project sites under one `USERNAME.github.io` hostname share the same browser origin. A dedicated custom hostname gives NumberWalk stronger storage isolation from unrelated pages controlled under the same GitHub Pages origin.
 
-## Removing local data
 
-Open NumberWalk Settings → Privacy & local data → **Clear all NumberWalk data**. Browser/site-data controls can also remove it.
+## FindMyAddress
 
-## Shared-origin note for GitHub Pages
+Choosing **Check official address** opens `https://www.findmyaddress.co.uk/search` in a new browser tab.
 
-Browser storage is scoped by origin. Multiple project sites under the same `https://USERNAME.github.io` origin are not isolated from each other by repository path. A dedicated custom hostname provides stronger separation.
+NumberWalk does not transmit your saved survey database, GPS coordinates, API key, or Google account information to FindMyAddress. Any address search you perform there is entered directly into the FindMyAddress website and is subject to that service's own privacy terms and usage limits.

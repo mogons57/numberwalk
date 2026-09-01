@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://unpkg.com https://server.arcgisonline.com https://*.tile.openstreetmap.org https://maps.gstatic.com https://maps.googleapis.com https://*.googleusercontent.com; connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://server.arcgisonline.com https://*.tile.openstreetmap.org; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://unpkg.com https://server.arcgisonline.com https://*.tile.openstreetmap.org https://maps.gstatic.com https://maps.googleapis.com https://*.googleusercontent.com; connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://server.arcgisonline.com https://*.tile.openstreetmap.org; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0d5c63" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,10 +18,7 @@
 <body>
   <div id="app">
     <header class="topbar">
-      <div>
-        <div class="eyebrow">STREET ADDRESS SURVEY</div>
-        <h1>NumberWalk</h1>
-      </div>
+      <strong>NumberWalk</strong>
       <button id="gpsBtn" class="icon-button" type="button" aria-label="Centre on my location">◎</button>
     </header>
 
@@ -34,65 +31,54 @@
     <main>
       <section id="surveyTab" class="tab-panel active">
         <div id="sessionBanner" class="session-banner hidden">
-          <div>
-            <strong id="sessionStreet"></strong>
-            <div id="sessionMeta" class="muted"></div>
-          </div>
+          <div class="session-text"><strong id="sessionStreet"></strong><span id="sessionMeta"></span></div>
           <button id="changeSessionBtn" class="small-button" type="button">Change</button>
         </div>
 
-        <div id="map" class="map"></div>
-        <div class="map-note">
-          <span id="gpsStatus">Getting location…</span>
-          <span>Tap the centre of the correct building.</span>
+        <div class="survey-map-wrap">
+          <div id="map" class="map survey-map"></div>
+          <div class="map-status"><span id="gpsStatus">Getting location…</span><span id="bearingStatus">N</span></div>
+          <div class="rotate-controls" aria-label="Map rotation controls">
+            <button id="rotateLeftBtn" type="button" title="Rotate map left">↺</button>
+            <button id="northBtn" type="button" title="North up">N</button>
+            <button id="rotateRightBtn" type="button" title="Rotate map right">↻</button>
+          </div>
         </div>
 
-        <section class="capture-card">
-          <div class="number-row">
-            <button id="prevNumberBtn" class="step-button" type="button">−</button>
-            <label class="number-field">
-              <span>House number</span>
+        <section class="capture-card compact-capture">
+          <div class="number-row compact-number-row">
+            <button id="prevNumberBtn" class="step-button" type="button" aria-label="Previous number">−</button>
+            <label class="number-field compact-number-field">
+              <span>House</span>
               <input id="houseNumber" inputmode="text" autocomplete="off" value="1" />
             </label>
-            <button id="nextNumberBtn" class="step-button" type="button">+</button>
+            <button id="nextNumberBtn" class="step-button" type="button" aria-label="Next number">+</button>
           </div>
 
-          <div id="addressPreview" class="address-preview"></div>
+          <button id="saveNextBtn" class="primary-button save-next" type="button">SAVE &amp; NEXT HOUSE</button>
 
-          <div class="position-grid">
-            <div class="position-box">
-              <span>Selected position</span>
-              <strong id="selectedPosition">Tap a building</strong>
-            </div>
-            <div class="position-box">
-              <span>Google comparison</span>
-              <strong id="googlePosition">Not checked</strong>
-            </div>
+          <div class="after-save-row" aria-label="Number change after saving">
+            <span>Next:</span>
+            <button class="next-step" data-step="-2" type="button">−2</button>
+            <button class="next-step" data-step="-1" type="button">−1</button>
+            <button class="next-step" data-step="0" type="button">0</button>
+            <button class="next-step" data-step="1" type="button">+1</button>
+            <button class="next-step active" data-step="2" type="button">+2</button>
           </div>
 
+          <div class="compact-status-row">
+            <span id="selectedPosition">Tap a building</span>
+            <button id="compareBtn" class="text-button" type="button">Compare Google</button>
+            <button id="findMyAddressBtn" class="text-button" type="button">Check official address</button>
+          </div>
+          <div id="googlePosition" class="google-result">Not checked</div>
           <div id="shiftRow" class="shift-row hidden"></div>
-
-          <textarea id="note" rows="2" placeholder="Optional note — e.g. number visible on left door"></textarea>
-
-          <div class="action-row">
-            <label class="secondary-button camera-button">
-              <input id="photoInput" type="file" accept="image/*" capture="environment" />
-              📷 Photo
-            </label>
-            <button id="compareBtn" class="secondary-button" type="button">Compare Google</button>
-          </div>
-          <div id="photoStatus" class="photo-status hidden"></div>
-
-          <button id="saveNextBtn" class="primary-button" type="button">SAVE &amp; NEXT HOUSE</button>
         </section>
       </section>
 
       <section id="reviewTab" class="tab-panel">
-        <div class="page-heading">
-          <div>
-            <div class="eyebrow">CURRENT WALK</div>
-            <h2>Review surveyed houses</h2>
-          </div>
+        <div class="page-heading compact-heading">
+          <h2>Review surveyed houses</h2>
           <button id="reviewMapBtn" class="small-button" type="button">Fit map</button>
         </div>
         <div id="reviewMap" class="map review-map"></div>
@@ -101,13 +87,11 @@
       </section>
 
       <section id="queueTab" class="tab-panel">
-        <div class="page-heading">
-          <div>
-            <div class="eyebrow">GOOGLE MAPS</div>
-            <h2>Submission queue</h2>
-          </div>
+        <div class="page-heading compact-heading queue-heading">
+          <h2>Submission queue</h2>
+          <button id="shareBackupBtn" class="small-button" type="button">Email / share backup</button>
         </div>
-        <p class="intro">Open each address in Google Maps, use <strong>Suggest an edit → Fix an address</strong>, move the pin to the building you surveyed, then mark it submitted here.</p>
+        <p class="intro">Open an address in Google Maps, use <strong>Suggest an edit → Fix an address</strong>, move the pin to the surveyed building, then mark it submitted here.</p>
         <div class="queue-filter">
           <button class="filter-button active" data-filter="to-submit">To submit</button>
           <button class="filter-button" data-filter="submitted">Submitted</button>
@@ -135,11 +119,13 @@
         <label>First number
           <input id="startNumber" inputmode="text" value="1" required />
         </label>
-        <label>Sequence
-          <select id="sideMode">
-            <option value="odd">Odd (+2)</option>
-            <option value="even">Even (+2)</option>
-            <option value="all">Every number (+1)</option>
+        <label>After save
+          <select id="defaultStep">
+            <option value="2">+2</option>
+            <option value="1">+1</option>
+            <option value="0">0</option>
+            <option value="-1">−1</option>
+            <option value="-2">−2</option>
           </select>
         </label>
       </div>
@@ -154,20 +140,18 @@
     <form method="dialog" class="dialog-card">
       <div class="eyebrow">OPTIONAL</div>
       <h2>Google comparison</h2>
-      <p class="intro">NumberWalk does not sign in to Google and never asks for your Google password. The optional browser API key is used only for <strong>Compare Google</strong>. Browser API keys are visible to the browser, so always restrict the key in Google Cloud to this website and to the required APIs.</p>
+      <p class="intro dialog-intro">NumberWalk does not sign in to Google and never asks for your Google password. The optional browser API key is used only for <strong>Compare Google</strong>.</p>
       <label>Google Maps browser API key
         <input id="googleApiKey" autocomplete="off" autocapitalize="none" spellcheck="false" type="password" placeholder="Optional" />
       </label>
       <label class="checkbox-row"><input id="rememberApiKey" type="checkbox" /> Remember API key on this device</label>
-      <p class="muted">Off by default. When off, the key is kept only for this browser session. When on, it is stored in this site's browser storage. It is never committed to GitHub by NumberWalk.</p>
       <label>Maximum Google comparisons per day
         <input id="dailyApiLimit" type="number" min="1" max="10000" inputmode="numeric" value="250" />
       </label>
       <p id="apiUsageStatus" class="muted">Google comparisons today: 0 / 250</p>
-      <p class="muted">This is a local safety limit stored on this device. It prevents NumberWalk itself from making more comparison requests after the limit is reached; it is not a substitute for Google Cloud API restrictions.</p>
       <details class="settings-details">
         <summary>Privacy &amp; local data</summary>
-        <p class="muted">Survey records and reference photos stay in browser storage on this device. Map tiles are requested from Esri/OpenStreetMap, so those providers receive normal web-request information including your IP address and the map tiles viewed.</p>
+        <p class="muted">Survey records stay in browser storage on this device. The backup button can export them as a CSV file through the phone's share sheet.</p>
         <button id="clearLocalDataBtn" class="secondary-button danger-outline" type="button">Clear all NumberWalk data</button>
       </details>
       <div class="dialog-actions">
@@ -180,6 +164,7 @@
   <button id="settingsBtn" class="floating-settings" type="button" aria-label="Settings">⚙</button>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@tomickigrzegorz/leaflet-rotate@0.2.4/dist/leaflet-rotate.umd.min.js" crossorigin="anonymous"></script>
   <script src="app.js"></script>
 </body>
 </html>
