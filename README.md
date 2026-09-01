@@ -119,3 +119,7 @@ No NumberWalk survey record, GPS coordinate, Google API key, or account credenti
 
 ## v0.10 field refinements
 The locate button now centres at zoom 19 rather than zoom 20, avoiding unavailable aerial imagery at excessive zoom. Settings → Privacy & local data now has two deletion options: **Clear survey data** removes surveyed house records while preserving the Google API key and settings; **Clear all NumberWalk data** removes surveys, settings and API-key storage.
+
+
+## v0.12 zoom behaviour
+The Survey and Review maps now support half-step zoom levels (`zoomSnap: 0.5`, `zoomDelta: 0.5`). The Locate control centres the survey map at zoom 18.5.

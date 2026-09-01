@@ -65,7 +65,7 @@ function addLayers(m){
   L.control.layers({'Aerial':aerial,'Street map':osm},null,{position:'topleft'}).addTo(m);
 }
 function initMap(){
-  map=L.map('map',{zoomControl:false,rotate:true,touchRotate:true,dragRotate:false,shiftKeyRotate:false,bearing:0}).setView([51.591,-2.756],18);
+  map=L.map('map',{zoomControl:false,rotate:true,touchRotate:true,dragRotate:false,shiftKeyRotate:false,bearing:0,zoomSnap:0.5,zoomDelta:0.5}).setView([51.591,-2.756],18);
   L.control.zoom({position:'bottomright'}).addTo(map);addLayers(map);
   surveyLayer=L.layerGroup().addTo(map);
   map.on('click',e=>setSelected(e.latlng));
@@ -159,7 +159,7 @@ function renderReview(){
     c.append(h,meta,actions);list.appendChild(c);
   });
   if(reviewMap){reviewMap.remove();reviewMap=null}
-  reviewMap=L.map('reviewMap',{rotate:true,touchRotate:true}).setView(currentPos?[currentPos.lat,currentPos.lng]:[51.591,-2.756],18);addLayers(reviewMap);const pts=[];
+  reviewMap=L.map('reviewMap',{rotate:true,touchRotate:true,zoomSnap:0.5,zoomDelta:0.5}).setView(currentPos?[currentPos.lat,currentPos.lng]:[51.591,-2.756],18);addLayers(reviewMap);const pts=[];
   records.forEach(r=>{if(!Number.isFinite(+r.lat)||!Number.isFinite(+r.lng))return;L.marker([+r.lat,+r.lng],{icon:houseIcon(r,'review-number'),interactive:false}).addTo(reviewMap);pts.push([+r.lat,+r.lng])});
   if(pts.length)reviewMap.fitBounds(pts,{padding:[25,25],maxZoom:20});setTimeout(()=>reviewMap.invalidateSize(),50);
 }
