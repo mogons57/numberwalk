@@ -30,3 +30,7 @@ GitHub Pages project sites under one `USERNAME.github.io` hostname share the sam
 Choosing **Check official address** opens `https://www.findmyaddress.co.uk/search` in a new browser tab.
 
 NumberWalk does not transmit your saved survey database, GPS coordinates, API key, or Google account information to FindMyAddress. Any address search you perform there is entered directly into the FindMyAddress website and is subject to that service's own privacy terms and usage limits.
+
+
+## Clearing local data
+**Clear survey data** deletes surveyed house records while keeping NumberWalk settings and any API key you chose to remember. **Clear all NumberWalk data** removes the entire NumberWalk local state, including survey records, settings and API-key storage.

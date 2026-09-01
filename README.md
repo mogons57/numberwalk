@@ -115,3 +115,7 @@ The button opens the official GeoPlace/Ordnance Survey-backed FindMyAddress webs
 NumberWalk deliberately does **not** scrape, automate, proxy, or attempt to bypass FindMyAddress's published personal-use search limit. You perform the lookup directly on FindMyAddress and can then return to NumberWalk to record the correct number/address.
 
 No NumberWalk survey record, GPS coordinate, Google API key, or account credential is automatically sent to FindMyAddress.
+
+
+## v0.10 field refinements
+The locate button now centres at zoom 19 rather than zoom 20, avoiding unavailable aerial imagery at excessive zoom. Settings → Privacy & local data now has two deletion options: **Clear survey data** removes surveyed house records while preserving the Google API key and settings; **Clear all NumberWalk data** removes surveys, settings and API-key storage.

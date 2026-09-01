@@ -108,7 +108,7 @@ function locate(){
   $('gpsStatus').textContent='Getting location…';
   navigator.geolocation.getCurrentPosition(p=>{
     currentPos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};
-    map.setView([currentPos.lat,currentPos.lng],20);
+    map.setView([currentPos.lat,currentPos.lng],19);
     if(gpsCircle)map.removeLayer(gpsCircle);
     gpsCircle=L.circle([currentPos.lat,currentPos.lng],{radius:Math.max(2,currentPos.accuracy),weight:1}).addTo(map);
     $('gpsStatus').textContent=`GPS ±${Math.round(currentPos.accuracy)} m`;
@@ -267,6 +267,7 @@ $('saveNextBtn').onclick=saveRecord;$('compareBtn').onclick=compare;$('findMyAdd
 $('settingsBtn').onclick=()=>{$('googleApiKey').value=getGoogleKey();$('rememberApiKey').checked=!!state.rememberApiKey;$('dailyApiLimit').value=apiLimit();updateApiUsageDisplay();$('settingsDialog').showModal()};
 $('saveKeyBtn').onclick=()=>{const next=$('googleApiKey').value.trim();if(next!==getGoogleKey()&&googleMapsPromise)alert('API key saved. Reload NumberWalk before using Google comparison with the new key.');setGoogleKey(next,$('rememberApiKey').checked);const lim=parseInt($('dailyApiLimit').value,10);state.dailyApiLimit=Number.isFinite(lim)&&lim>=1?Math.min(lim,10000):DEFAULT_DAILY_API_LIMIT;save();updateApiUsageDisplay();$('settingsDialog').close()};
 $('clearKeyBtn').onclick=()=>{setGoogleKey('',false);$('googleApiKey').value='';$('rememberApiKey').checked=false};
+$('clearSurveyDataBtn').onclick=()=>{if(!confirm('Clear all surveyed houses from NumberWalk on this device? Your Google API key and settings will be kept. This cannot be undone.'))return;state.records=[];save();clearSelection();renderAll();alert('Survey data cleared. Your API key and settings have been kept.')};
 $('clearLocalDataBtn').onclick=()=>{if(!confirm('Clear all NumberWalk survey records, settings and API-key storage on this device? This cannot be undone.'))return;try{localStorage.removeItem(K);sessionStorage.removeItem(API_SESSION_KEY)}catch(_){ }location.reload()};
 document.body.onclick=e=>{
   const b=e.target.closest('[data-both]');if(b){openBothPositions(b.dataset.both);return}

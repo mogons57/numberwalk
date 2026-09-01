@@ -38,3 +38,7 @@ This is a lightweight static-app review, not a formal penetration test. Browser,
 ## FindMyAddress integration
 
 The FindMyAddress integration is intentionally link-only. NumberWalk does not scrape or call undocumented FindMyAddress endpoints, does not store FindMyAddress credentials, and does not attempt to evade usage limits. The site is opened with `noopener` to prevent the new page from controlling the NumberWalk window.
+
+
+## Local deletion controls
+The survey-only deletion control modifies only the locally stored survey-record array. API-key and configuration storage are left intact. The full-clear control remains available to remove all NumberWalk local state.
